@@ -193,6 +193,7 @@ def keyboard_controller(screen):
             cursor_msg = ""
             last_loop_time = last_slow_msg_time = last_cycleTime = time.time()
             clock = pygame.time.Clock()
+            is_armed = False
             while True:
                 start_time = time.time()
                 char = screen.getch()  # get keypress
@@ -208,7 +209,7 @@ def keyboard_controller(screen):
                             CMDS['CH5'] = 1800
                         elif event.dict.get('button', -1) == 1:
                             cursor_msg = 'Sending Disarm command...'
-                            CMDS['CH5'] = 1000
+                            CMDS['CH5'] = 900
                         elif event.dict.get('button', -1) == 3:
                             if CMDS['CH6'] <= 1200:
                                 cursor_msg = 'Horizon Mode...'
@@ -228,45 +229,46 @@ def keyboard_controller(screen):
 
                 pygame.event.pump()
 
-                delta = int(joysticks[-1].get_axis(1) * 10)
-                target_throttle = CMDS['throttle'] - delta
-                if target_throttle <= 900:
-                    target_throttle = 900
-                elif target_throttle >= 2500:
-                    target_throttle = 2500
-                CMDS['throttle'] = target_throttle
+                if is_armed:
+                    delta = int(joysticks[-1].get_axis(1) * 10)
+                    target_throttle = CMDS['throttle'] - delta
+                    if target_throttle <= 900:
+                        target_throttle = 900
+                    elif target_throttle >= 2500:
+                        target_throttle = 2500
+                    CMDS['throttle'] = target_throttle
 
-                cursor_msg = f'{-delta}'
+                    cursor_msg = f'{-delta}'
 
-                delta = int(joysticks[-1].get_axis(0) * 300)
-                delta = delta if abs(delta) >= 10 else 0
-                target_yaw = 1500 - delta
-                if target_yaw <= 0:
-                    target_yaw = 0
-                elif target_yaw >= 3000:
-                    target_yaw = 3000
-                CMDS['yaw'] = target_yaw
-                cursor_msg += f' {delta}'
+                    delta = int(joysticks[-1].get_axis(0) * 300)
+                    delta = delta if abs(delta) >= 100 else 0
+                    target_yaw = 1500 + delta
+                    if target_yaw <= 0:
+                        target_yaw = 0
+                    elif target_yaw >= 3000:
+                        target_yaw = 3000
+                    CMDS['yaw'] = target_yaw
+                    cursor_msg += f' {delta}'
 
-                delta = int(joysticks[-1].get_axis(3) * 300)
-                delta = delta if abs(delta) >= 10 else 0
-                target_pitch = 1500 - delta
-                if target_pitch <= 0:
-                    target_pitch = 0
-                elif target_pitch >= 3000:
-                    target_pitch = 3000
-                CMDS['pitch'] = target_pitch
-                cursor_msg += f' {delta}'
+                    delta = int(joysticks[-1].get_axis(3) * 400)
+                    delta = delta if abs(delta) >= 10 else 0
+                    target_pitch = 1500 - delta
+                    if target_pitch <= 0:
+                        target_pitch = 0
+                    elif target_pitch >= 3000:
+                        target_pitch = 3000
+                    CMDS['pitch'] = target_pitch
+                    cursor_msg += f' {delta}'
 
-                delta = int(joysticks[-1].get_axis(2) * 300)
-                delta = delta if abs(delta) >= 10 else 0
-                target_roll = 1500 + delta
-                if target_roll <= 0:
-                    target_roll = 0
-                elif target_roll >= 3000:
-                    target_roll = 3000
-                CMDS['roll'] = target_roll
-                cursor_msg += f' {delta}'
+                    delta = int(joysticks[-1].get_axis(2) * 400)
+                    delta = delta if abs(delta) >= 10 else 0
+                    target_roll = 1500 + delta
+                    if target_roll <= 0:
+                        target_roll = 0
+                    elif target_roll >= 3000:
+                        target_roll = 3000
+                    CMDS['roll'] = target_roll
+                    cursor_msg += f' {delta}'
 
                 #
                 # Key input processing
@@ -395,6 +397,7 @@ def keyboard_controller(screen):
 
                     elif next_msg == 'MSP_STATUS_EX':
                         ARMED = board.bit_check(board.CONFIG['mode'], 0)
+                        is_armed = ARMED
                         screen.addstr(5, 0, "ARMED: {}".format(
                             ARMED), curses.A_BOLD)
                         screen.clrtoeol()
